@@ -1,0 +1,58 @@
+<div class="container mt-5">
+	<div class="row">
+		<div class="col-4"></div>
+		<div class="col-4">
+			<p><b>Enter your login and password. If you have not been registered new user will be created.</b></p>
+			<div class="alert alert-danger" role="alert" id="authMessage" style="display: none;">
+				A simple danger alert—check it out!
+			</div>
+			<form>
+				<div class="mb-3">
+					<label for="inputLogin" class="form-label">Login</label>
+					<input type="text" class="form-control form-field" id="inputLogin">
+				</div>
+				<div class="mb-3">
+					<label for="inputPassword" class="form-label">Password</label>
+					<input type="password" class="form-control form-field" id="inputPassword">
+				</div>
+				<button type="button" class="btn btn-primary" id="inputSubmit">Enter!</button>
+			</form>
+		</div>
+		<div class="col-4"></div>
+	</div>
+</div>
+
+<script>
+	window.onload = function() {
+
+		$('.form-field').keypress(function (e) {
+			if (e.which === 13)  {
+				$('#inputSubmit').click();
+				return false;
+			}
+		});
+
+		$('#inputSubmit').on('click', function()
+		{
+			$('#authMessage').hide();
+
+			$.ajax({
+				url: '/api/auth',
+				method: 'POST',
+				data: {
+					login: $('#inputLogin').val(),
+					password: $('#inputPassword').val(),
+				},
+				success: function(result) {
+					if (result.error) {
+						$('#authMessage').html(result.error).show();
+					} else {
+						window.location.reload();
+					}
+				}
+			});
+
+			return false;
+		});
+	}
+</script>

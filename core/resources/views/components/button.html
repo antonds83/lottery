@@ -1,0 +1,97 @@
+<div class="container text-center">
+	<div class="row">
+		<div class="col-4"></div>
+		<div class="col-4">
+			<button type="button" class="btn btn-primary btn-lg mt-5" id="rollButton">
+				Roll the dice
+			</button>
+			<div class="alert alert-info mt-5" role="alert" id="rollLoader" style="display: none;">
+				Rolling the dice...
+			</div>
+			<div class="alert alert-info mt-5 text-left" role="alert" id="rollResult" style="display: none;">
+			</div>
+		</div>
+		<div class="col-4">
+			<a href="" id="logoutLink">Log out</a>
+		</div>
+	</div>
+</div>
+
+<script>
+	window.onload = function() {
+
+		function getCookie(name) {
+			let value = `; ${document.cookie}`;
+			let parts = value.split(`; ${name}=`);
+			if (parts.length === 2) return parts.pop().split(';').shift();
+		}
+
+		$(document).on('click', '.game-action', function() {
+			$.ajax({
+				url: '/api/rollaction',
+				method: 'POST',
+				data: {
+					token: getCookie('UserStoredHash'),
+					round: $(this).data('round'),
+					code: $(this).data('code')
+				},
+				success: function(result) {
+					if (result.error) {
+						alert(result.error);
+						return;
+					}
+					$('#rollResult').hide();
+				}
+			});
+			return false;
+		});
+
+		$('#logoutLink').on('click', function()
+		{
+			document.cookie = 'UserStoredHash=; Max-Age=-99999999;';
+		});
+
+		$('#rollButton').on('click', function()
+		{
+			$('#rollResult').hide();
+			$('#rollButton').hide();
+			$('#rollLoader').show();
+
+			setTimeout(function() {
+				$.ajax({
+					url: '/api/roll',
+					method: 'POST',
+					data: {
+						token: getCookie('UserStoredHash')
+					},
+					success: function(result) {
+
+						$('#rollButton').show();
+						$('#rollLoader').hide();
+
+						if (result.error) {
+							alert(result.error);
+							return;
+						}
+
+						let actions = [];
+						let message = `You win <b>${result.result}</b> in the game <b>&laquo;${result.title}&raquo;</b>!`;
+
+						if (result.actions && result.result_raw > 0) {
+							for (let ai = 0, ac = result.actions.length; ai < ac; ai++) {
+								actions.push(
+									`<a href="#" class="game-action" data-round="${result.round}" data-code="${result.actions[ai].code}">${result.actions[ai].title}</a>`
+								);
+							}
+						}
+
+						$('#rollResult').show().html(
+							`${message}<br>` +
+							`${actions.join('<br>')}`
+						);
+					}
+				});
+			}, 500);
+		});
+	}
+</script>
